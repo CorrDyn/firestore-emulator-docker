@@ -1,7 +1,5 @@
 # Google Cloud Firestore Emulator
 
-[![CircleCI](https://circleci.com/gh/mtlynch/firestore-emulator-docker.svg?style=svg)](https://circleci.com/gh/mtlynch/firestore-emulator-docker) [![Docker Pulls](https://img.shields.io/docker/pulls/mtlynch/firestore-emulator.svg?maxAge=604800)](https://hub.docker.com/r/mtlynch/firestore-emulator/) [![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](LICENSE)
-
 A [Google Cloud Firestore Emulator](https://cloud.google.com/sdk/gcloud/reference/beta/emulators/firestore/) container image. The image creates a local, standalone Firestore emulator for testing Firestore-backed apps.
 
 ## Quickstart
@@ -14,7 +12,7 @@ docker run \
   --env "FIRESTORE_PROJECT_ID=dummy-project-id" \
   --env "PORT=8080" \
   --publish 8080:8080 \
-  mtlynch/firestore-emulator-docker
+  corrdyn/firestore-emulator-docker
 ```
 
 ## Example docker-compose configuration
@@ -25,7 +23,7 @@ To run the emulator in a `docker-compose` configuration with your app, use the f
 version: "3.2"
 services:
   firestore_emulator:
-    image: mtlynch/firestore-emulator
+    image: corrdyn/firestore-emulator
     environment:
       - FIRESTORE_PROJECT_ID=dummy-project-id
       - PORT=8200
@@ -36,6 +34,42 @@ services:
       - FIRESTORE_PROJECT_ID=dummy-project-id
   depends_on:
     - firestore_emulator
+```
+
+## Example GitHub Actions Workflow
+Place this in .github/workflows/run_tests.yaml:
+```yaml
+name: Run Tests
+on: push
+jobs:
+  nox:
+    name: Run Tests with Nox
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.7, 3.8 ]
+    services:
+      firestore-emulator:
+        image: corrdyn/firestore-emulator
+        env:
+          FIRESTORE_PROJECT_ID: test
+          PORT: 8001
+        ports:
+          # assign random port
+          - 8001/tcp
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Nox
+        run: pip install nox
+      - name: Test with Nox
+        env:
+          # use randomly assigned port
+          FIRESTORE_EMULATOR_HOST: localhost:${{ job.services.firestore-emulator.ports[8001] }}
+        run: nox
 ```
 
 ## Environment variables
