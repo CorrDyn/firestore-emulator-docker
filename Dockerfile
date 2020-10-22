@@ -1,4 +1,4 @@
-ARG GCLOUD_SDK_VERSION=271.0.0-alpine
+ARG GCLOUD_SDK_VERSION=315.0.0-alpine
 
 FROM google/cloud-sdk:$GCLOUD_SDK_VERSION
 LABEL maintainer="Michael Lynch <michael@mtlynch.io>"
